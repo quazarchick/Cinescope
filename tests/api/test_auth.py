@@ -22,7 +22,7 @@ class TestAuthAPI:
         assert "roles" in response_data, "Роли пользователя отсутствуют в ответе"
 
         #Проверяем, что роль USER назначена по умолчанию
-
+        assert "USER" in response_data["roles"], "Роль USER не назначена у пользователя"
 
 
 
