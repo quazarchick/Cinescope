@@ -1,6 +1,6 @@
 import pytest
 import requests
-from constants import BASE_URL, HEADERS, REGISTER_ENDPONT
+from constants import BASE_URL, HEADERS, REGISTER_ENDPONT, LOGIN_ENDPOINT
 
 class TestAuthAPI:
     def test_register_user(self, test_user):
@@ -23,6 +23,21 @@ class TestAuthAPI:
 
         #Проверяем, что роль USER назначена по умолчанию
         assert "USER" in response_data["roles"], "Роль USER не назначена у пользователя"
+
+    def test_auth_user(self, test_user):
+        #Собираем УРЛ
+        auth_url = f"{BASE_URL}{LOGIN_ENDPOINT}"
+
+        auth_data = {
+            "email":test_user["email"],
+            "password": test_user["password"]
+        }
+        #Отправляем запрос
+        response = requests.post(auth_url, json=auth_data,headers=HEADERS)
+        assert response.status_code == 200, "Пользователь не залогинился"
+        response_data = response.json()
+        assert "accessToken" in response_data, "accessToken отсутствует"
+        assert response_data["user"]["email"] == test_user["email"], "email записан некорректно"
 
 
 

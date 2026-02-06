@@ -15,7 +15,7 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_name():
-        return f"{faker.first_name()} {faker.last_name}"
+        return f"{faker.first_name()} {faker.last_name()}"
 
     @staticmethod
     def generate_random_password():

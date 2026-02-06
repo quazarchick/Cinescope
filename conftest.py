@@ -35,12 +35,12 @@ def test_user():
         # Регистрируем нового пользователя
         register_url = f"{BASE_URL}{REGISTER_ENDPONT}"
         response = requests.post(register_url, json=test_user, headers=HEADERS)
-        assert response.status_code == 201, "Ошибка регистрации полььзователя"
+        assert response.status_code == 201, "Ошибка регистрации пользователя"
 
         #Логинимся для получения токена
         login_url = f"{BASE_URL}{LOGIN_ENDPOINT}"
         login_data = {
-            "email":test_user["email"]
+            "email":test_user["email"],
             "password": test_user["password"]
         }
         response = requests.post(login_url, json=login_data, headers=HEADERS)
