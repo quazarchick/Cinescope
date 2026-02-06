@@ -7,7 +7,7 @@ class TestAuthAPI:
         #URL для регистрации
         register_url = f"{BASE_URL}{REGISTER_ENDPONT}"
 
-        #Отправка запроса на регистрацию
+        #Отправка запроса на регистрацdию
         response = requests.post(register_url, json=test_user, headers=HEADERS)
 
         #Логирование ответа для диагностики
@@ -29,7 +29,7 @@ class TestAuthAPI:
         auth_url = f"{BASE_URL}{LOGIN_ENDPOINT}"
 
         auth_data = {
-            "email":test_user["email"],
+            "email": test_user["email"],
             "password": test_user["password"]
         }
         #Отправляем запрос
@@ -38,6 +38,33 @@ class TestAuthAPI:
         response_data = response.json()
         assert "accessToken" in response_data, "accessToken отсутствует"
         assert response_data["user"]["email"] == test_user["email"], "email записан некорректно"
+
+        #Авторизация с некорректным паролем
+        pswd_fail_data = {
+            "email":test_user["email"],
+            "password": "password"
+        }
+        #Отправляем запрос
+        response = requests.post(auth_url, json=pswd_fail_data, headers=HEADERS)
+        assert response.status_code == 401, "Пользователь авторизован"
+        response_data = response.json()
+        assert response_data["message"] == "Неверный логин или пароль", "Текста нет"
+
+        # Авторизация с некорректным email
+        email_fail_data = {
+            "email": "email@mail.com",
+            "password": test_user["password"]
+        }
+        response = requests.post(auth_url, json=email_fail_data, headers=HEADERS)
+        assert response.status_code == 401, "Пользователь авторизован"
+        response_data = response.json()
+        assert response_data["message"] == "Неверный логин или пароль", "Текста нет"
+
+        #Авторизация с пустым телом запроса
+        response = requests.post(auth_url, json={}, headers=HEADERS)
+        assert response.status_code == 401, "Пользователь авторизован"
+        response_data = response.json()
+        assert response_data["message"] == "Неверный логин или пароль", "Текста нет"
 
 
 
