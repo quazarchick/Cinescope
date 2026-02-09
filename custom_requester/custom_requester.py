@@ -40,24 +40,22 @@ class CustomRequester:
         :return: Объект ответа requests.Response.
         """
         url = f"{self.base_url}{endpoint}"
-        response = self.session.request(method, url, json=data)
-
+        response = self.session.request(method, url, json=data, headers=self.headers)
         if need_logging:
             self.log_request_and_response(response)
-
         if response.status_code != expected_status:
-            raise ValueError(f"Unexpenced status code {response.status_code}. Expected {expected_status}")
-
+            raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
         return response
 
 
     def _update_session_headers(self, **kwargs):
         """
         Обновление заголовков сессии.
+        :param session: Объект requests.Session, предоставленный API-классом.
         :param kwargs: Дополнительные заголовки.
         """
-        self.headers.update(kwargs)
-        self.session.headers.update(self.headers)
+        self.headers.update(kwargs)  # Обновляем базовые заголовки
+        self.session.headers.update(self.headers)  # Обновляем заголовки в текущей сессии
 
     def log_request_and_response(self, response):
         """
