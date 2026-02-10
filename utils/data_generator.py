@@ -1,5 +1,6 @@
 import random
 import string
+import uuid
 from string import digits
 
 from faker import Faker
@@ -11,7 +12,9 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_email():
-        random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        random_string = "".join(
+            random.choices(string.ascii_lowercase + string.digits, k=8)
+        )
         return f"kek{random_string}@gmail.com"
 
     @staticmethod
@@ -20,13 +23,13 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_password():
-        '''
+        """
         Генерация пароля, соответствующего требованиям:
         - Минимум 1 буква.
         - Минимум 1 цифра.
         - Допустимые символы.
         - Длина от 8 до 20 символов.
-        '''
+        """
 
         # Гарантируем наличие хотя бы одной буквы и цифры
         letters = random.choice(string.ascii_letters)  # Одна буква
@@ -36,10 +39,35 @@ class DataGenerator:
         special_chars = "&@#$%^&*|:"
         all_chars = string.ascii_letters + string.digits + special_chars
         remaining_lenght = random.randint(6, 18)  # Остальная длина пароля
-        remaining_chars = ''.join(random.choices(all_chars, k=remaining_lenght))
+        remaining_chars = "".join(random.choices(all_chars, k=remaining_lenght))
 
         # Перемешиваем пароль для рандомизации
         password = list(letters + digits + remaining_chars)
         random.shuffle(password)
 
-        return ''.join(password)
+        return "".join(password)
+
+    @staticmethod
+    def generate_random_filmname():
+        return f"movie_{uuid.uuid4()}"
+
+    @staticmethod
+    def generate_random_price():
+        return faker.random_int(1, 1000,50)
+
+    @staticmethod
+    def generate_random_description():
+        return f"{faker.paragraph()}"
+
+    @staticmethod
+    def generate_random_location():
+        location = ["MSK", "SPB"]
+        return f"{random.choice(location)}"
+
+    @staticmethod
+    def generate_random_puslished():
+        return faker.pybool(50)
+
+    @staticmethod
+    def generate_random_genre():
+        return faker.random_int(1, 10,1)
