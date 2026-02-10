@@ -1,3 +1,4 @@
+import time
 from itertools import count
 
 import pytest
@@ -93,3 +94,63 @@ class TestMoviesAPI:
         assert response_data["genre"]["name"] == created_film["genre"]["name"]
         assert response_data["createdAt"] == created_film["createdAt"]
         assert response_data["rating"] == created_film["rating"]
+
+    def test_get_movie_posters_negative(self, api_manager):
+        params = {
+            "pageSize": 10,
+            "page": 1,
+            "minPrice": 1,
+            "maxPrice": 1000,
+            "locations": "NNO",
+            "published": "true",
+            "genreId": 1,
+            "createdAt": "asc",
+        }
+        # Negative-case: отправка запроса с ошибочными query параметрами
+        response = api_manager.movies_api.get_movie_posters(params, expected_status=400)
+        assert "Bad Request" in response.text
+
+    def test_create_film_negative(self, request_movies, admin_credentials, api_manager):
+        api_manager.auth_api.authenticate(
+            (admin_credentials["username"], admin_credentials["password"])
+        )
+        bad_request_movies = {
+            "imageUrl": "https://image.url",
+            "price": 100,
+            "description": "Описание фильма",
+            "location": "SPB",
+            "published": "true",
+            "genreId": 1,
+        }
+        # Negative-case: создание фильма c некорректными параметрами в теле запроса
+        response = api_manager.movies_api.create_film(
+            bad_request_movies, expected_status=400
+        )
+        assert "Bad Request" in response.text
+
+    def test_get_movie_negative(self, api_manager):
+        # Negative-case: попытка получения информации о несуществующем фильме
+        movie_id = 1
+        response = api_manager.movies_api.get_movie(movie_id, expected_status=404)
+        assert "Not Found" in response.text
+
+    def test_partial_update_movie_negative(
+        self, api_manager, created_film, admin_credentials
+    ):
+        # Negative-case: попытка отправить несуществующий параметр в теле запроса для обновления информации
+        movie_id = created_film["id"]
+        movie_data = {"surname": f"{faker.unique.word()}"}
+        response = api_manager.movies_api.partial_update_movie(
+            movie_id, movie_data, expected_status=400
+        )
+        assert "Bad Request" in response.text
+
+    def test_delete_movie_negative(self, api_manager, admin_credentials):
+        api_manager.auth_api.authenticate(
+            (admin_credentials["username"], admin_credentials["password"])
+        )
+        # Negative-case: Попытка удалить несуществующий фильм
+        movie_id = 12
+        response = api_manager.movies_api.delete_movie(movie_id, expected_status=404)
+        response_data = response.json()
+        assert "Not Found" in response.text
