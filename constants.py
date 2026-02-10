@@ -5,4 +5,4 @@ HEADERS = {
 }
 
 LOGIN_ENDPOINT = "login"
-REGISTER_ENDPONT = "register"
+REGISTER_ENDPOINT = "register"
