@@ -1,5 +1,4 @@
 from custom_requester.custom_requester import CustomRequester
-from constants import BASE_URL
 
 
 class MoviesAPI(CustomRequester):
@@ -9,12 +8,12 @@ class MoviesAPI(CustomRequester):
         )
         self.session = session
 
-    def get_movie_posters(self, params, expected_status=200):
+    def get_movies(self, params, expected_status=200):
         return self.send_request(
             method="GET", endpoint=f"movies", data=None, params=params, expected_status=expected_status
         )
 
-    def create_film(self, movie_data, expected_status=201):
+    def create_movie(self, movie_data, expected_status=201):
         return self.send_request(
             method="POST",
             endpoint=f"movies",

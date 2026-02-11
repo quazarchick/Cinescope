@@ -1,7 +1,6 @@
 import random
 import string
 import uuid
-from string import digits
 
 from faker import Faker
 
@@ -53,21 +52,21 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_price():
-        return faker.random_int(1, 1000,50)
+        return faker.random_int(1, 1000, 50)
 
     @staticmethod
     def generate_random_description():
-        return f"{faker.paragraph()}"
+        return faker.paragraph()
 
     @staticmethod
     def generate_random_location():
         location = ["MSK", "SPB"]
-        return f"{random.choice(location)}"
+        return random.choice(location)
 
     @staticmethod
-    def generate_random_puslished():
+    def generate_random_published():
         return faker.pybool(50)
 
     @staticmethod
     def generate_random_genre():
-        return faker.random_int(1, 10,1)
+        return faker.random_int(1, 10, 1)
