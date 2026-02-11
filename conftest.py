@@ -64,7 +64,7 @@ def registered_user(api_manager, test_user):
 
 
 @pytest.fixture()
-def created_film(api_manager, admin_credentials, request_movies):
+def created_film_with_cleanup(api_manager, admin_credentials, request_movies):
     api_manager.auth_api.authenticate(
         (admin_credentials["username"], admin_credentials["password"])
     )
@@ -78,9 +78,21 @@ def created_film(api_manager, admin_credentials, request_movies):
     api_manager.auth_api.authenticate(
         (admin_credentials["username"], admin_credentials["password"])
     )
+
     response_delete = api_manager.movies_api.delete_movie(movie_id)
     response_get = api_manager.movies_api.get_movie(movie_id, expected_status=404)
 
+@pytest.fixture()
+def created_film(api_manager, admin_credentials, request_movies):
+    api_manager.auth_api.authenticate(
+        (admin_credentials["username"], admin_credentials["password"])
+    )
+
+    response = api_manager.movies_api.create_movie(request_movies)
+    movie_data = response.json()
+    assert movie_data["id"] is not None
+    movie_id = movie_data["id"]
+    return movie_data
 
 @pytest.fixture(scope="session")
 def admin_credentials():

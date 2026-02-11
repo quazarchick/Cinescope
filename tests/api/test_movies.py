@@ -129,18 +129,18 @@ class TestMoviesAPI:
     def test_partial_update_movie_negative(
         self, authorized_admin_session, created_film
     ):
-        # Negative-case: попытка отправить несуществующий параметр в теле запроса для обновления информации
+        # Negative-case: попытка изменить данные в несуществующем фильме
         movie_id = created_film["id"]
         movie_data = {"surname": f"{faker.unique.word()}"}
         response = authorized_admin_session.movies_api.partial_update_movie(
-            movie_id, movie_data, expected_status=400
+            movie_id, movie_data, expected_status=404
         )
-        assert "Bad Request" in response.text
+        assert "Not Found" in response.text
 
-    def test_delete_movie_negative(self, authorized_admin_session):
+    def test_delete_movie_negative(self, created_film, api_manager):
         # Negative-case: Попытка удалить несуществующий фильм
         movie_id = faker.random_int(999999, 9999999,10000)
-        response = authorized_admin_session.movies_api.delete_movie(
+        response = api_manager.movies_api.delete_movie(
             movie_id, expected_status=404
         )
         response_data = response.json()
