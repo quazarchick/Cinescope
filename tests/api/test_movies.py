@@ -1,6 +1,3 @@
-import pytest
-import requests
-from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
 from utils.data_generator import faker
 
 
@@ -44,25 +41,25 @@ class TestMoviesAPI:
         assert response_data["createdAt"] is not None
         assert response_data["rating"] is not None
 
-    def test_get_movie(self, authorized_admin_session, created_film):
+    def test_get_movie(self, authorized_admin_session, created_film_with_cleanup):
         # Positive-case: получение информации о фильме
-        movie_id = created_film["id"]
+        movie_id = created_film_with_cleanup["id"]
         response = authorized_admin_session.movies_api.get_movie(movie_id)
         response_data = response.json()
-        assert response_data["id"] == created_film["id"]
-        assert response_data["name"] == created_film["name"]
-        assert response_data["price"] == created_film["price"]
-        assert response_data["description"] == created_film["description"]
-        assert response_data["location"] == created_film["location"]
-        assert response_data["published"] == created_film["published"]
-        assert response_data["genreId"] == created_film["genreId"]
-        assert response_data["genre"]["name"] == created_film["genre"]["name"]
-        assert response_data["createdAt"] == created_film["createdAt"]
-        assert response_data["rating"] == created_film["rating"]
+        assert response_data["id"] == created_film_with_cleanup["id"]
+        assert response_data["name"] == created_film_with_cleanup["name"]
+        assert response_data["price"] == created_film_with_cleanup["price"]
+        assert response_data["description"] == created_film_with_cleanup["description"]
+        assert response_data["location"] == created_film_with_cleanup["location"]
+        assert response_data["published"] == created_film_with_cleanup["published"]
+        assert response_data["genreId"] == created_film_with_cleanup["genreId"]
+        assert response_data["genre"]["name"] == created_film_with_cleanup["genre"]["name"]
+        assert response_data["createdAt"] == created_film_with_cleanup["createdAt"]
+        assert response_data["rating"] == created_film_with_cleanup["rating"]
 
-    def test_partial_update_movie(self, authorized_admin_session, created_film):
+    def test_partial_update_movie(self, authorized_admin_session, created_film_with_cleanup):
         # Positive-case: частичное изменение информации о фильме
-        movie_id = created_film["id"]
+        movie_id = created_film_with_cleanup["id"]
         movie_data = {"name": f"{faker.unique.word()}"}
         response = authorized_admin_session.movies_api.partial_update_movie(
             movie_id, movie_data
@@ -127,20 +124,20 @@ class TestMoviesAPI:
         assert "Not Found" in response.text
 
     def test_partial_update_movie_negative(
-        self, authorized_admin_session, created_film
+        self, authorized_admin_session, created_film_with_cleanup
     ):
         # Negative-case: попытка изменить данные в несуществующем фильме
-        movie_id = created_film["id"]
+        movie_id = created_film_with_cleanup["id"]
         movie_data = {"surname": f"{faker.unique.word()}"}
         response = authorized_admin_session.movies_api.partial_update_movie(
             movie_id, movie_data, expected_status=404
         )
         assert "Not Found" in response.text
 
-    def test_delete_movie_negative(self, created_film, api_manager):
+    def test_delete_movie_negative(self, authorized_admin_session):
         # Negative-case: Попытка удалить несуществующий фильм
         movie_id = faker.random_int(999999, 9999999,10000)
-        response = api_manager.movies_api.delete_movie(
+        response = authorized_admin_session.movies_api.delete_movie(
             movie_id, expected_status=404
         )
         response_data = response.json()
