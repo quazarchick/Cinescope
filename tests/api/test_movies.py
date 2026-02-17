@@ -1,16 +1,25 @@
+import pytest
+
 from utils.data_generator import faker
 
 
 class TestMoviesAPI:
-    def test_get_movie_posters(self, super_admin):
+
+    @pytest.mark.parametrize(
+        "min_price,max_price,locations,genre_id",
+        [(1, 100, "MSK", 1), (100, 500, "SPB", 2)],
+    )
+    def test_get_movie_posters(
+        self, super_admin, min_price, max_price, locations, genre_id
+    ):
         params = {
             "pageSize": 10,
             "page": 1,
-            "minPrice": 1,
-            "maxPrice": 1000,
-            "locations": "MSK",
+            "minPrice": min_price,
+            "maxPrice": max_price,
+            "locations": locations,
             "published": "true",
-            "genreId": 1,
+            "genreId": genre_id,
             "createdAt": "asc",
         }
         # Positive-case: отправка запроса с query параметрами, и получение списка постеров
@@ -20,11 +29,11 @@ class TestMoviesAPI:
         assert response_data["page"] == 1
         assert len(response_data["movies"]) <= 10
         for movie in response_data["movies"]:
-            assert movie["price"] >= 1
-            assert movie["price"] <= 1000
-            assert movie["location"] == "MSK"
+            assert movie["price"] >= min_price
+            assert movie["price"] <= max_price
+            assert movie["location"] == locations
             assert movie["published"] is True
-            assert movie["genreId"] == 1
+            assert movie["genreId"] == genre_id
 
     def test_create_film(self, request_movies, super_admin):
         # Positive-case: создание фильма
@@ -53,7 +62,9 @@ class TestMoviesAPI:
         assert response_data["location"] == created_film_with_cleanup["location"]
         assert response_data["published"] == created_film_with_cleanup["published"]
         assert response_data["genreId"] == created_film_with_cleanup["genreId"]
-        assert response_data["genre"]["name"] == created_film_with_cleanup["genre"]["name"]
+        assert (
+            response_data["genre"]["name"] == created_film_with_cleanup["genre"]["name"]
+        )
         assert response_data["createdAt"] == created_film_with_cleanup["createdAt"]
         assert response_data["rating"] == created_film_with_cleanup["rating"]
 
@@ -113,10 +124,8 @@ class TestMoviesAPI:
 
     def test_get_movie_negative(self, super_admin):
         # Negative-case: попытка получения информации о несуществующем фильме
-        movie_id = faker.random_int(999999, 9999999,10000)
-        response = super_admin.api.movies_api.get_movie(
-            movie_id, expected_status=404
-        )
+        movie_id = faker.random_int(999999, 9999999, 10000)
+        response = super_admin.api.movies_api.get_movie(movie_id, expected_status=404)
         assert "Not Found" in response.text
 
     def test_partial_update_movie_negative(
@@ -132,7 +141,7 @@ class TestMoviesAPI:
 
     def test_delete_movie_negative(self, super_admin):
         # Negative-case: Попытка удалить несуществующий фильм
-        movie_id = faker.random_int(999999, 9999999,10000)
+        movie_id = faker.random_int(999999, 9999999, 10000)
         response = super_admin.api.movies_api.delete_movie(
             movie_id, expected_status=404
         )
@@ -141,5 +150,11 @@ class TestMoviesAPI:
 
     def test_create_movie_by_user_negative(self, common_user, request_movies):
         # Negative-case: Попытка создать фильм под пользователем
-        response = common_user.api.movies_api.create_movie(request_movies, expected_status=403)
+        response = common_user.api.movies_api.create_movie(
+            request_movies, expected_status=403
+        )
         assert "Forbidden" in response.text
+
+    @pytest.mark.parametrize("input_data,expected", [(1, 2), (2, 4), (3, 6)])
+    def test_multiply_by_two(self, input_data, expected):
+        assert input_data * 2 == expected
