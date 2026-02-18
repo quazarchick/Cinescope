@@ -1,5 +1,5 @@
 import pytest
-
+from conftest import super_admin, common_user
 from utils.data_generator import faker
 
 
@@ -75,6 +75,7 @@ class TestMoviesAPI:
         response = super_admin.api.movies_api.partial_update_movie(movie_id, movie_data)
         response_data = response.json()
         assert response_data["name"] == movie_data["name"]
+
 
     def test_delete_movie(self, super_admin, created_film):
         # Positive: Успешное удаление фильма
@@ -155,6 +156,23 @@ class TestMoviesAPI:
         )
         assert "Forbidden" in response.text
 
-    @pytest.mark.parametrize("input_data,expected", [(1, 2), (2, 4), (3, 6)])
-    def test_multiply_by_two(self, input_data, expected):
-        assert input_data * 2 == expected
+    @pytest.mark.parametrize("role, expected_status", [("super_admin", 200), ("common_user", 403), ("admin", 403)])
+    def test_delete_movie_second(self, role, created_film, expected_status, super_admin, common_user, admin, request):
+        user = request.getfixturevalue(role)
+        # Positive: Успешное удаление фильма
+        movie_id = created_film["id"]
+        response = user.api.movies_api.delete_movie(movie_id, expected_status)
+        response_data = response.json()
+        if response.status_code == 200:
+            assert response_data["id"] == created_film["id"]
+            assert response_data["name"] == created_film["name"]
+            assert response_data["price"] == created_film["price"]
+            assert response_data["description"] == created_film["description"]
+            assert response_data["location"] == created_film["location"]
+            assert response_data["published"] == created_film["published"]
+            assert response_data["genreId"] == created_film["genreId"]
+            assert response_data["genre"]["name"] == created_film["genre"]["name"]
+            assert response_data["createdAt"] == created_film["createdAt"]
+            assert response_data["rating"] == created_film["rating"]
+        else:
+            assert "Forbidden" in response.text
