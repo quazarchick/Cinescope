@@ -76,7 +76,6 @@ class TestMoviesAPI:
         response_data = response.json()
         assert response_data["name"] == movie_data["name"]
 
-
     def test_delete_movie(self, super_admin, created_film):
         # Positive: Успешное удаление фильма
         movie_id = created_film["id"]
@@ -156,8 +155,20 @@ class TestMoviesAPI:
         )
         assert "Forbidden" in response.text
 
-    @pytest.mark.parametrize("role, expected_status", [("super_admin", 200), ("common_user", 403), ("admin", 403)])
-    def test_delete_movie_second(self, role, created_film, expected_status, super_admin, common_user, admin, request):
+    @pytest.mark.parametrize(
+        "role, expected_status",
+        [("super_admin", 200), ("common_user", 403), ("admin", 403)],
+    )
+    def test_delete_movie_second(
+        self,
+        role,
+        created_film,
+        expected_status,
+        super_admin,
+        common_user,
+        admin,
+        request,
+    ):
         user = request.getfixturevalue(role)
         # Positive: Успешное удаление фильма
         movie_id = created_film["id"]
