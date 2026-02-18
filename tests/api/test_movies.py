@@ -35,6 +35,7 @@ class TestMoviesAPI:
             assert movie["published"] is True
             assert movie["genreId"] == genre_id
 
+    @pytest.mark.ui
     def test_create_film(self, request_movies, super_admin):
         # Positive-case: создание фильма
         response = super_admin.api.movies_api.create_movie(request_movies)
@@ -50,6 +51,7 @@ class TestMoviesAPI:
         assert response_data["createdAt"] is not None
         assert response_data["rating"] is not None
 
+    @pytest.mark.db
     def test_get_movie(self, super_admin, created_film_with_cleanup):
         # Positive-case: получение информации о фильме
         movie_id = created_film_with_cleanup["id"]
@@ -148,6 +150,7 @@ class TestMoviesAPI:
         response_data = response.json()
         assert "Not Found" in response.text
 
+    @pytest.mark.slow
     def test_create_movie_by_user_negative(self, common_user, request_movies):
         # Negative-case: Попытка создать фильм под пользователем
         response = common_user.api.movies_api.create_movie(
@@ -159,6 +162,7 @@ class TestMoviesAPI:
         "role, expected_status",
         [("super_admin", 200), ("common_user", 403), ("admin", 403)],
     )
+    @pytest.mark.slow
     def test_delete_movie_second(
         self,
         role,
