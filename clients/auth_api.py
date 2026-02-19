@@ -1,4 +1,4 @@
-from constant import REGISTER_ENDPOINT, LOGIN_ENDPOINT
+from constants.constant import REGISTER_ENDPOINT, LOGIN_ENDPOINT
 from custom_requester.custom_requester import CustomRequester
 
 

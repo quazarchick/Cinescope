@@ -6,14 +6,13 @@
 """
 
 import requests
-from constant import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
 import pytest
 from utils.data_generator import DataGenerator
-from custom_requester.custom_requester import CustomRequester
 from clients.api_manager import ApiManager
 from resources.user_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
+from models.pydantic_model import TestUser, RegisterUserResponse
 
 
 @pytest.fixture()
@@ -21,17 +20,15 @@ def test_user():
     """
     Генерация случайного пользователя для тестов
     """
-    random_email = DataGenerator.generate_random_email()
-    random_name = DataGenerator.generate_random_name()
     random_password = DataGenerator.generate_random_password()
 
-    return {
-        "email": random_email,
-        "fullName": random_name,
-        "password": random_password,
-        "passwordRepeat": random_password,
-        "roles": [Roles.USER.value],
-    }
+    return TestUser(
+        email=DataGenerator.generate_random_email(),
+        fullName=DataGenerator.generate_random_name(),
+        password=random_password,
+        passwordRepeat=random_password,
+        roles=[Roles.USER.value]
+    )
 
 @pytest.fixture()
 def test_admin():
@@ -73,11 +70,12 @@ def registered_user(api_manager, test_user):
     """
     Фикстура для регистрации и получения данных зарегистрированного пользователя.
     """
-    response = api_manager.user_api.send_request(test_user)
-    response_data = response.json()
+    response = api_manager.auth_api.register_user(test_user)
+    response_data = RegisterUserResponse(**response.json())
     registered_user = test_user.copy()
-    registered_user["id"] = response_data["id"]
-    return registered_user
+    registered_user.email = response_data.email
+    response_data.password = registered_user.password
+    return response_data
 
 
 @pytest.fixture()
@@ -153,8 +151,7 @@ def super_admin(user_session):
 
 @pytest.fixture(scope="function")
 def creation_user_data(test_user):
-    updated_data = test_user.copy()
-    updated_data.update({"verified": True, "banned": False})
+    updated_data = test_user.model_copy(update={"verified": True, "banned": False})
     return updated_data
 
 @pytest.fixture(scope="function")
@@ -169,8 +166,8 @@ def common_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data["email"],
-        creation_user_data["password"],
+        creation_user_data.email,
+        creation_user_data.password,
         [Roles.USER.value],
         new_session,
     )

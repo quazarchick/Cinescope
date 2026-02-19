@@ -1,5 +1,4 @@
 from custom_requester.custom_requester import CustomRequester
-from constant import BASE_URL
 
 
 class UserAPI(CustomRequester):
@@ -22,7 +21,7 @@ class UserAPI(CustomRequester):
         :param expected_status: Ожидаемый статус-код.
         """
         return self.send_request(
-            method="GET", endpoint=f"/user/{user_locator}", expected_status=expected_status
+            method="GET", endpoint=f"user/{user_locator}", expected_status=expected_status
         )
 
     def create_user(self, user_data, expected_status=201):

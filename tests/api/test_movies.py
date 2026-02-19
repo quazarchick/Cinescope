@@ -171,7 +171,7 @@ class TestMoviesAPI:
         super_admin,
         common_user,
         admin,
-        request,
+        request
     ):
         user = request.getfixturevalue(role)
         # Positive: Успешное удаление фильма
