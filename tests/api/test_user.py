@@ -1,5 +1,4 @@
 import pytest
-from clients import api_manager
 from models.pydantic_model import RegisterUserResponse
 
 

@@ -25,7 +25,13 @@ class CustomRequester:
         self.logger.setLevel(logging.INFO)
 
     def send_request(
-        self, method, endpoint, data=None, params=None, expected_status=200, need_logging=True
+        self,
+        method,
+        endpoint,
+        data=None,
+        params=None,
+        expected_status=200,
+        need_logging=True,
     ):
         """
         Универсальный метод для отправки запросов.
@@ -68,16 +74,18 @@ class CustomRequester:
         """
         try:
             request = response.request
-            headers = " \\\n".join([f"-H '{header}: {value}'" for header, value in request.headers.items()])
+            headers = " \\\n".join(
+                [f"-H '{header}: {value}'" for header, value in request.headers.items()]
+            )
             full_test_name = f"pytest {os.environ.get('PYTEST_CURRENT_TEST', '').replace(' (call)', '')}"
 
             body = ""
-            if hasattr(request, 'body') and request.body is not None:
+            if hasattr(request, "body") and request.body is not None:
                 if isinstance(request.body, bytes):
-                    body = request.body.decode('utf-8')
+                    body = request.body.decode("utf-8")
                 elif isinstance(request.body, str):
                     body = request.body
-                body = f"-d '{body}' \n" if body != '{}' else ''
+                body = f"-d '{body}' \n" if body != "{}" else ""
 
             self.logger.info(
                 f"{GREEN}{full_test_name}{RESET}\n"
@@ -90,8 +98,10 @@ class CustomRequester:
             is_success = response.ok
             response_data = response.text
             if not is_success:
-                self.logger.info(f"\tRESPONSE:"
-                                 f"\nSTATUS_CODE: {RED}{response_status}{RESET}"
-                                 f"\nDATA: {RED}{response_data}{RESET}")
+                self.logger.info(
+                    f"\tRESPONSE:"
+                    f"\nSTATUS_CODE: {RED}{response_status}{RESET}"
+                    f"\nDATA: {RED}{response_data}{RESET}"
+                )
         except Exception as e:
             self.logger.info(f"\nLogging went wrong: {type(e)} - {e}")
