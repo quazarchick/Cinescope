@@ -1,6 +1,7 @@
 import pytest
 from conftest import super_admin, common_user
 from utils.data_generator import faker
+from db_requester.db_helpers import DBHelper
 
 
 class TestMoviesAPI:
@@ -78,21 +79,39 @@ class TestMoviesAPI:
         response_data = response.json()
         assert response_data["name"] == movie_data["name"]
 
-    def test_delete_movie(self, super_admin, created_film):
+    @pytest.mark.parametrize(
+        "role, expected_status",
+        [("super_admin", 200), ("common_user", 403), ("admin", 403)],
+    )
+    @pytest.mark.slow
+    def test_delete_movie(
+        self,
+        role,
+        created_film,
+        expected_status,
+        super_admin,
+        common_user,
+        admin,
+        request,
+    ):
+        user = request.getfixturevalue(role)
         # Positive: Успешное удаление фильма
         movie_id = created_film["id"]
-        response = super_admin.api.movies_api.delete_movie(movie_id)
+        response = user.api.movies_api.delete_movie(movie_id, expected_status)
         response_data = response.json()
-        assert response_data["id"] == created_film["id"]
-        assert response_data["name"] == created_film["name"]
-        assert response_data["price"] == created_film["price"]
-        assert response_data["description"] == created_film["description"]
-        assert response_data["location"] == created_film["location"]
-        assert response_data["published"] == created_film["published"]
-        assert response_data["genreId"] == created_film["genreId"]
-        assert response_data["genre"]["name"] == created_film["genre"]["name"]
-        assert response_data["createdAt"] == created_film["createdAt"]
-        assert response_data["rating"] == created_film["rating"]
+        if response.status_code == 200:
+            assert response_data["id"] == created_film["id"]
+            assert response_data["name"] == created_film["name"]
+            assert response_data["price"] == created_film["price"]
+            assert response_data["description"] == created_film["description"]
+            assert response_data["location"] == created_film["location"]
+            assert response_data["published"] == created_film["published"]
+            assert response_data["genreId"] == created_film["genreId"]
+            assert response_data["genre"]["name"] == created_film["genre"]["name"]
+            assert response_data["createdAt"] == created_film["createdAt"]
+            assert response_data["rating"] == created_film["rating"]
+        else:
+            assert "Forbidden" in response.text
 
     def test_get_movie_posters_negative(self, super_admin):
         params = {
@@ -158,36 +177,46 @@ class TestMoviesAPI:
         )
         assert "Forbidden" in response.text
 
-    @pytest.mark.parametrize(
-        "role, expected_status",
-        [("super_admin", 200), ("common_user", 403), ("admin", 403)],
-    )
-    @pytest.mark.slow
-    def test_delete_movie_second(
-        self,
-        role,
-        created_film,
-        expected_status,
-        super_admin,
-        common_user,
-        admin,
-        request,
+    @pytest.mark.db
+    def test_create_film_with_database_check(
+        self, request_movies, super_admin, db_helper
     ):
-        user = request.getfixturevalue(role)
-        # Positive: Успешное удаление фильма
-        movie_id = created_film["id"]
-        response = user.api.movies_api.delete_movie(movie_id, expected_status)
+        db_movie_check = db_helper.get_movie_by_name(request_movies["name"])
+        assert db_movie_check is None
+
+        response = super_admin.api.movies_api.create_movie(request_movies)
         response_data = response.json()
-        if response.status_code == 200:
-            assert response_data["id"] == created_film["id"]
-            assert response_data["name"] == created_film["name"]
-            assert response_data["price"] == created_film["price"]
-            assert response_data["description"] == created_film["description"]
-            assert response_data["location"] == created_film["location"]
-            assert response_data["published"] == created_film["published"]
-            assert response_data["genreId"] == created_film["genreId"]
-            assert response_data["genre"]["name"] == created_film["genre"]["name"]
-            assert response_data["createdAt"] == created_film["createdAt"]
-            assert response_data["rating"] == created_film["rating"]
-        else:
-            assert "Forbidden" in response.text
+
+        db_movie_check = db_helper.get_movie_by_name(request_movies["name"])
+        assert db_movie_check is not None
+
+        assert db_movie_check.name == response_data["name"]
+        assert db_movie_check.id == response_data["id"]
+        assert db_movie_check.price == response_data["price"]
+
+        delete_movie = super_admin.api.movies_api.delete_movie(response_data["id"])
+
+        db_movie_check = db_helper.get_movie_by_name(response_data["name"])
+        assert db_movie_check is None
+
+    def test_delete_movie_with_database_check(self, super_admin, db_helper, request_movies_db):
+        # Negative-case: Попытка удалить несуществующий фильм
+        movie_id = faker.random_int(999999, 9999999, 10000)
+
+        get_movie_id = db_helper.get_movie_by_id(movie_id)
+
+        if get_movie_id is None:
+            movie_data = request_movies_db.copy()
+            movie_data["id"] = movie_id
+            db_helper.create_test_movie(movie_data)
+
+        response = super_admin.api.movies_api.delete_movie(movie_id)
+
+        get_response = super_admin.api.movies_api.get_movie(
+            movie_id, expected_status=404
+        )
+        assert (
+            get_response.status_code == 404
+        ), "Фильм не должен существовать после удаления"
+
+

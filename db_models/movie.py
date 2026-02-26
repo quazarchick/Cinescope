@@ -32,4 +32,4 @@ class MoviesDB(Base):
             "created_at": self.created_at
         }
     def __repr__(self):
-        return f"<Movie(id='{self.id}', email='{self.name}')>"
+        return f"<Movie(id='{self.id}', name='{self.name}', price = {self.price})>"
