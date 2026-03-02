@@ -13,7 +13,7 @@ from clients.api_manager import ApiManager
 from resources.user_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
-from models.pydantic_model import TestUser, RegisterUserResponse
+from models.pydantic_model import TestUser, RegisterUserResponse, CreateMovieRequest, CreateMovieResponse
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helpers import DBHelper
@@ -97,15 +97,15 @@ def request_movies():
     random_published = DataGenerator.generate_random_published()
     random_genre = DataGenerator.generate_random_genre()
 
-    return {
-        "name": random_filmname,
-        "imageUrl": "https://image.url",
-        "price": random_price,
-        "description": random_description,
-        "location": random_location,
-        "published": random_published,
-        "genreId": random_genre,
-    }
+    return CreateMovieRequest (
+        name=random_filmname,
+        imageUrl="https://image.url",
+        price=random_price,
+        description=random_description,
+        location=random_location,
+        published=random_published,
+        genreId=random_genre,
+    )
 
 
 @pytest.fixture()
@@ -125,9 +125,8 @@ def registered_user(api_manager, test_user):
 def created_film_with_cleanup(super_admin, request_movies):
     # Positive-case: создание фильма
     response = super_admin.api.movies_api.create_movie(request_movies)
-    movie_data = response.json()
-    assert movie_data["id"] is not None
-    movie_id = movie_data["id"]
+    movie_data = CreateMovieResponse(**response.json())
+    movie_id = movie_data.id
     yield movie_data
 
     response_delete = super_admin.api.movies_api.delete_movie(movie_id)
@@ -137,9 +136,8 @@ def created_film_with_cleanup(super_admin, request_movies):
 @pytest.fixture()
 def created_film(super_admin, request_movies):
     response = super_admin.api.movies_api.create_movie(request_movies)
-    movie_data = response.json()
-    assert movie_data["id"] is not None
-    movie_id = movie_data["id"]
+    movie_data = CreateMovieResponse(**response.json())
+    movie_id = movie_data.id
     return movie_data
 
 
