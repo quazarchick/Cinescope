@@ -200,7 +200,7 @@ class TestMoviesAPI:
         assert db_movie_check is None
 
     def test_delete_movie_with_database_check(self, super_admin, db_helper, request_movies_db):
-        # Negative-case: Попытка удалить несуществующий фильм
+        # Negative-case: Попытка удалить несуществующий фильм, с проверкой в базе данных
         movie_id = faker.random_int(999999, 9999999, 10000)
 
         get_movie_id = db_helper.get_movie_by_id(movie_id)
