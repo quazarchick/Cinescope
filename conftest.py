@@ -4,6 +4,7 @@
 1. `test_user` – генерация случайного пользователя.
 2. `auth_session` – регистрация, логин и создание авторизационной сессии.
 """
+import datetime
 
 import requests
 import pytest
@@ -13,6 +14,48 @@ from resources.user_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
 from models.pydantic_model import TestUser, RegisterUserResponse
+from sqlalchemy.orm import Session
+from db_requester.db_client import get_db_session
+from db_requester.db_helpers import DBHelper
+
+@pytest.fixture(scope="module")
+def db_session() -> Session:
+    '''
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    '''
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+    """
+    Фикстура для экземпляра хелпера
+    """
+    db_helper = DBHelper(db_session)
+    return db_helper
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+    """
+    Фикстура, которая создает тестового пользователя в БД
+    и удаляет его после завершения теста
+    """
+    user = db_helper.create_test_user(DataGenerator.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)
+
+
+@pytest.fixture(scope="function")
+def created_test_movie(db_helper, super_admin, request_movies_db):
+    '''Фикстура, которая создает тестовый фильм по запросу и удаляет его после завершения теста'''
+    movie = db_helper.create_test_movie(request_movies_db)
+    yield movie
+    if db_helper.get_movie_by_id(movie.id):
+        super_admin.api.movies_api.delete_movie(movie.id)
 
 
 @pytest.fixture()
@@ -190,3 +233,17 @@ def admin(user_session, super_admin, creation_admin_data):
     super_admin.api.user_api.create_user(creation_admin_data)
     admin.api.auth_api.authenticate(admin.creds)
     return admin
+
+@pytest.fixture()
+def request_movies_db():
+    return {
+        "name": DataGenerator.generate_random_filmname(),
+        "image_url": "https://image.url",
+        "price": DataGenerator.generate_random_price(),
+        "description": DataGenerator.generate_random_description(),
+        "location": DataGenerator.generate_random_location(),
+        "published": DataGenerator.generate_random_published(),
+        "genre_id": DataGenerator.generate_random_genre(),
+        "rating": 0,
+        "created_at": datetime.datetime.utcnow()
+    }
