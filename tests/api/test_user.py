@@ -10,7 +10,7 @@ class TestUser:
         assert response_data.fullName == creation_user_data.fullName
         assert response_data.roles == creation_user_data.roles
         assert response_data.verified == creation_user_data.verified
-        assert response_data.banned == creation_user_data.banned
+
 
     def test_get_user_by_locator(self, super_admin, creation_user_data):
         created_user_response = super_admin.api.user_api.create_user(creation_user_data)

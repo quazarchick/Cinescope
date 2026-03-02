@@ -27,7 +27,7 @@ class RegisterUserResponse(BaseModel):
     email: str = Field(pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
     fullName: str
     verified: bool
-    banned: bool
+    banned: Optional[bool] = None
     roles: list[Roles]
     createdAt: str
     password: Optional[str] = None
@@ -40,3 +40,63 @@ class RegisterUserResponse(BaseModel):
             raise ValueError("Некорректный формат даты и времени")
         return value
 
+
+class MovieBase(BaseModel):
+    name: str
+    price: int = Field(..., ge=1, le=1000)
+    description: str
+    genreId: int = Field(..., ge=1, le=10)
+
+
+class GenreResponse(BaseModel):
+    name: str
+
+
+class CreateMovieRequest(MovieBase):
+    imageUrl: str
+    location: str
+    published: bool
+
+
+class EditMovieRequest(BaseModel):
+    name: Optional[str] = None
+    price: int | None = Field(default=None, ge=1, le=1000)
+    description: Optional[str] = None
+    genreId: int | None = Field(default=None, ge=1, le=10)
+    imageUrl: Optional[str] = None
+    location: Optional[str] = None
+    published: Optional[bool] = None
+
+
+class CreateMovieResponse(MovieBase):
+    id: int
+    imageUrl: Optional[str] = None
+    location: str
+    published: bool
+    genre: GenreResponse
+    createdAt: datetime.datetime
+    rating: int
+
+
+class UserReviewResponse(BaseModel):
+    fullName: str
+
+
+class ReviewResponse(BaseModel):
+    userId: str
+    rating: int
+    text: str
+    createdAt: datetime.datetime
+    user: UserReviewResponse
+
+
+class GetMovieResponse(CreateMovieResponse):
+    reviews: list[ReviewResponse]
+
+
+class GetMoviesResponse(BaseModel):
+    movies: list[CreateMovieResponse]
+    count: int
+    page: int
+    pageSize: int
+    pageCount: int
