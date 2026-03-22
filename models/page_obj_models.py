@@ -132,5 +132,82 @@ class CinescopLoginPage(BasePage):
     def assert_allert_was_pop_up(self):
         self.check_pop_up_element_with_text("Вы вошли в аккаунт")
 
+class CinescopeMoviesPage(BasePage):
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self.url = f"{self.home_url}"
+
+        self.profile_icon = "p[.text-sm]"
+        self.profile_button = "button[type = 'button']"
+
+        self.movies_titles = "h2[text() = 'Последние фильмы']"
+
+        self.movie_title = "h3.text-md"
+        self.movie_description = "p[.mt-5 truncate]"
+        self.movie_button = "button:has-text('Подробнее')"
+
+    def open(self):
+        self.page.goto(self.url)
+
+    def click_to_random_film(self):
+        # Ждём появления первого заголовка фильма
+        self.page.locator(self.movie_title).first.wait_for(state="visible")
+        movie_name = self.page.locator(self.movie_title).first.text_content().strip()
+
+        # Кликаем по первой кнопке "Подробнее" с ожиданием навигации
+        with self.page.expect_navigation():
+            self.page.locator(self.movie_button).first.click()
+
+        movie_url = self.page.url
+        return movie_name, movie_url
+
+    #def wait_redirect_to_movie_page(self, expected_url: str):
+        #self.wait_redirect_for_url(expected_url)
+        #assert self.page.url == expected_url, f"Редирект не произошёл, открылась {self.page.url}"
+
+class CinescopeMoviePage(BasePage):
+    def __init__(self, page: Page, movie_url: str):
+        super().__init__(page)
+        self.url = movie_url
+
+        self.film_title = "h2[.text-6xl]"
+        self.film_description = "p[.mt-10]"
+        self.film_genre = "p[.mt-5]"
+        self.film_rating = "h3[text() = 'Рейтинг: ']"
+        self.buy_button = "p[text() = 'Купить билет']"
+
+        self.reviews_title = "h2[text() = 'Отзывы:']"
+        self.reviews_text = "textarea[name = 'text']"
+        self.review_rate = "p[text() = 'Оценка: ']"
+        self.review_rate_dropdown = "button[type = 'button']"
+        self.review_submit_button = "button[type = 'submit']"
+
+    def open(self):
+        self.page.goto(self.url)
+
+    def writing_a_review(self, text_review: str):
+        self.enter_text_to_element(self.reviews_text, text_review)
+        self.click_element(self.review_rate)
+        self.click_element(f"text='4'")
+        self.click_element(self.review_submit_button)
+
+    def assert_review_pop_up(self):
+        self.check_pop_up_element_with_text("Отзыв успешно создан")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
