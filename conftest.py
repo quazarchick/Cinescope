@@ -17,6 +17,7 @@ from models.pydantic_model import TestUser, RegisterUserResponse, CreateMovieReq
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helpers import DBHelper
+from models.page_obj_models import CinescopLoginPage
 
 @pytest.fixture(scope="module")
 def db_session() -> Session:
@@ -267,3 +268,12 @@ def page(context):
     page = context.new_page()
     yield page  # yield возвращает значение фикстуры, выполнение теста продолжится после yield
     page.close()  # Страница закрывается после завершения теста
+
+@pytest.fixture(scope="function")
+def logged_in_user_page(page, browser, registered_user):
+    #page = browser.new_page()
+    login_page = CinescopLoginPage(page)
+    login_page.open()
+    login_page.login(registered_user.email, registered_user.password)
+    login_page.assert_was_redirect_to_home_page()
+    return page

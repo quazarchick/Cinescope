@@ -142,44 +142,31 @@ class CinescopeMoviesPage(BasePage):
 
         self.movies_titles = "h2[text() = 'Последние фильмы']"
 
-        self.movie_title = "h3.text-md"
+        self.movie_title = "h2:has-text('Debra Fuller')"
         self.movie_description = "p[.mt-5 truncate]"
-        self.movie_button = "button:has-text('Подробнее')"
+        self.movie_button = "a[href='/movies' and text()='Подробнее]'"
 
     def open(self):
         self.page.goto(self.url)
 
     def click_to_random_film(self):
-        # Ждём появления первого заголовка фильма
-        self.page.locator(self.movie_title).first.wait_for(state="visible")
-        movie_name = self.page.locator(self.movie_title).first.text_content().strip()
+        self.page.locator(self.movie_button).click()
 
-        # Кликаем по первой кнопке "Подробнее" с ожиданием навигации
-        with self.page.expect_navigation():
-            self.page.locator(self.movie_button).first.click()
-
-        movie_url = self.page.url
-        return movie_name, movie_url
-
-    #def wait_redirect_to_movie_page(self, expected_url: str):
-        #self.wait_redirect_for_url(expected_url)
-        #assert self.page.url == expected_url, f"Редирект не произошёл, открылась {self.page.url}"
+    def assert_was_redirect_to_movie_page(self, movie_id: int):
+        expected_url = f"{self.home_url}movies/{movie_id}"
+        self.wait_redirect_for_url(expected_url)
 
 class CinescopeMoviePage(BasePage):
-    def __init__(self, page: Page, movie_url: str):
+    def __init__(self, page: Page):
         super().__init__(page)
-        self.url = movie_url
-
-        self.film_title = "h2[.text-6xl]"
-        self.film_description = "p[.mt-10]"
-        self.film_genre = "p[.mt-5]"
-        self.film_rating = "h3[text() = 'Рейтинг: ']"
-        self.buy_button = "p[text() = 'Купить билет']"
+        self.movie_title = page.get_by_role("heading", name="Fundamental leadingedge")
+        self.movie_id = '19768'
+        self.url = f"{self.home_url}movies/{self.movie_id}"
 
         self.reviews_title = "h2[text() = 'Отзывы:']"
         self.reviews_text = "textarea[name = 'text']"
-        self.review_rate = "p[text() = 'Оценка: ']"
-        self.review_rate_dropdown = "button[type = 'button']"
+        self.buy_button = "a[href = '/payment?movieId=']"
+        self.review_rate = page.get_by_text("Оценка:").locator("..").get_by_role("combobox")
         self.review_submit_button = "button[type = 'submit']"
 
     def open(self):
@@ -187,8 +174,12 @@ class CinescopeMoviePage(BasePage):
 
     def writing_a_review(self, text_review: str):
         self.enter_text_to_element(self.reviews_text, text_review)
-        self.click_element(self.review_rate)
-        self.click_element(f"text='4'")
+
+    def select_rate(self, rate):
+        self.review_rate.click()
+        self.page.get_by_role("option", name=rate).click()
+
+    def click_review_button(self):
         self.click_element(self.review_submit_button)
 
     def assert_review_pop_up(self):
