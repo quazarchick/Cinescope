@@ -92,3 +92,7 @@ class DataGenerator:
     @staticmethod
     def generate_random_int(value):
         return random.randint(0, value)
+
+    @staticmethod
+    def generate_random_rate():
+        return str(faker.random_int(1,2,1))
