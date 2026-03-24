@@ -8,6 +8,7 @@ import datetime
 
 import requests
 import pytest
+from models.pages.login_page import CinescopeLoginPage
 from utils.data_generator import DataGenerator
 from clients.api_manager import ApiManager
 from resources.user_creds import SuperAdminCreds
@@ -17,7 +18,6 @@ from models.pydantic_model import TestUser, RegisterUserResponse, CreateMovieReq
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.db_helpers import DBHelper
-from models.page_obj_models import CinescopLoginPage
 
 @pytest.fixture(scope="module")
 def db_session() -> Session:
@@ -260,7 +260,8 @@ def context(browser):
     context = browser.new_context()
     context.tracing.start(screenshots=True, snapshots=True, sources=True)  # Трассировка для отладки
     context.set_default_timeout(DEFAULT_UI_TIMEOUT)  # Установка таймаута по умолчанию
-    yield context  # yield возвращает значение фикстуры, выполнение теста продолжится после yield
+    yield context # yield возвращает значение фикстуры, выполнение теста продолжится после yield
+    context.tracing.stop(path="trace.zip")
     context.close()  # Контекст закрывается после завершения теста
 
 @pytest.fixture(scope="function")  # Страница создается для каждого теста
@@ -271,9 +272,8 @@ def page(context):
 
 @pytest.fixture(scope="function")
 def logged_in_user_page(page, browser, registered_user):
-    #page = browser.new_page()
-    login_page = CinescopLoginPage(page)
-    login_page.open()
+    login_page = CinescopeLoginPage(page)
+    login_page.open_login_url()
     login_page.login(registered_user.email, registered_user.password)
     login_page.assert_was_redirect_to_home_page()
     return page
